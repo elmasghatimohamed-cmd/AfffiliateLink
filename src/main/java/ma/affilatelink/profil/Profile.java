@@ -1,11 +1,17 @@
 package ma.affilatelink.profil;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
 
 @Entity
+@Setter
+@Getter
+@NoArgsConstructor
 @Table(name = "profile")
 @Inheritance(strategy = InheritanceType.JOINED)
 abstract class Profile {
@@ -14,41 +20,21 @@ abstract class Profile {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true,nullable = false)
+    @Column(name = "email",unique = true,nullable = false)
     private String email;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "status",nullable = false)
     private ProfileStatus status =  ProfileStatus.PENDING;
 
-    @Column(nullable = false)
+    @Column(name = "created_at",nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
-
-    protected Profile() {}
 
     protected Profile(String email) {
         this.email = email;
     }
 
-    Long getId() {
-        return id;
-    }
 
-    String getEmail() {
-        return email;
-    }
-
-    void setEmail(String email) {
-        this.email = email;
-    }
-
-    ProfileStatus getStatus() {
-        return status;
-    }
-
-    LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
 
     void activate() {
         this.status = ProfileStatus.ACTIVE;
