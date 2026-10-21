@@ -1,19 +1,24 @@
 package ma.affilatelink.profil;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
+@Getter
+@Setter
+@NoArgsConstructor
 @Table(name = "advertiser")
 class Advertiser extends Profile {
 
-    @Column(nullable = false)
+    @Column(name = "company_name", nullable = false)
     private String companyName;
-    @Column(nullable = false)
+    @Column(name = "sector", nullable = false)
     private String sector;
-    @Column(nullable = false)
+    @Column(name = "website", nullable = false)
     private String website;
 
-    protected Advertiser() {}
 
     protected Advertiser(String companyName, String sector, String website, String email) {
         super(email);
@@ -22,15 +27,4 @@ class Advertiser extends Profile {
         this.website = website;
     }
 
-    String getCompanyName() {
-        return companyName;
-    }
-
-    String getSector() {
-        return sector;
-    }
-
-    String getWebsite() {
-        return website;
-    }
 }
