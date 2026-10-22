@@ -8,6 +8,9 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 
+import ma.affilatelink.common.InvalidProfileStatusException;
+
+
 @Entity
 @Setter
 @Getter
@@ -36,12 +39,27 @@ abstract class Profile {
 
 
 
+
     void activate() {
+        if (status != ProfileStatus.PENDING
+                && status != ProfileStatus.SUSPENDED) {
+            throw new InvalidProfileStatusException(
+                    "Cannot activate a profile with status: " + status
+            );
+        }
+
         this.status = ProfileStatus.ACTIVE;
     }
 
     void suspend() {
+        if (status != ProfileStatus.ACTIVE) {
+            throw new InvalidProfileStatusException(
+                    "Cannot suspend a profile with status: " + status
+            );
+        }
+
         this.status = ProfileStatus.SUSPENDED;
     }
+
 
 }
