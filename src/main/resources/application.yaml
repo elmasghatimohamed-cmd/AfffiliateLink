@@ -1,3 +1,4 @@
+
 spring:
   application:
     name: affiliate-link
@@ -8,9 +9,20 @@ spring:
     password: ${POSTGRES_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
+  sql:
+    init:
+      mode: never
+
   jpa:
     hibernate:
       ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
 
   flyway:
     enabled: true
+
+server:
+  port: 8080
