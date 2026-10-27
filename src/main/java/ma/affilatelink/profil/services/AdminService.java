@@ -6,6 +6,8 @@ import ma.affilatelink.common.exceptions.InvalidProfileStatusException;
 import ma.affilatelink.profil.entities.Profile;
 import ma.affilatelink.profil.repositories.ProfileRepository;
 import ma.affilatelink.profil.enums.ProfileStatus;
+import ma.affilatelink.profil.events.ProfileSuspended;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +18,7 @@ import java.util.NoSuchElementException;
 public class AdminService {
 
     private final ProfileRepository profileRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public void changeStatus(Long id, ProfileStatus newStatus) {
@@ -28,7 +31,10 @@ public class AdminService {
 
         switch (newStatus) {
             case ACTIVE -> profile.activate();
-            case SUSPENDED -> profile.suspend();
+            case SUSPENDED -> {
+                profile.suspend();
+                eventPublisher.publishEvent(new ProfileSuspended(profile.getId()));
+            }
             case PENDING -> throw new InvalidProfileStatusException(
                     "A profile cannot transition to PENDING"
             );
