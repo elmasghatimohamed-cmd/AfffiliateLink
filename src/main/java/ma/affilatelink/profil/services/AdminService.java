@@ -1,8 +1,11 @@
 
-package ma.affilatelink.profil;
+package ma.affilatelink.profil.services;
 
 import lombok.RequiredArgsConstructor;
-import ma.affilatelink.common.InvalidProfileStatusException;
+import ma.affilatelink.common.exceptions.InvalidProfileStatusException;
+import ma.affilatelink.profil.entities.Profile;
+import ma.affilatelink.profil.repositories.ProfileRepository;
+import ma.affilatelink.profil.enums.ProfileStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

@@ -1,8 +1,13 @@
 
-package ma.affilatelink.profil;
+package ma.affilatelink.profil.services;
 
 import lombok.RequiredArgsConstructor;
-import ma.affilatelink.common.EmailAlreadyExistsException;
+import ma.affilatelink.common.exceptions.EmailAlreadyExistsException;
+import ma.affilatelink.profil.repositories.ProfileRepository;
+import ma.affilatelink.profil.dto.AdvertiserRequest;
+import ma.affilatelink.profil.dto.AdvertiserResponse;
+import ma.affilatelink.profil.entities.Advertiser;
+import ma.affilatelink.profil.repositories.AdvertiserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

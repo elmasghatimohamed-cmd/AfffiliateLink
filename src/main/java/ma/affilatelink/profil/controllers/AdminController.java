@@ -1,15 +1,17 @@
 
-package ma.affilatelink.profil;
+package ma.affilatelink.profil.controllers;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import ma.affilatelink.profil.services.AdminService;
+import ma.affilatelink.profil.dto.ChangeStatusRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/admin/profiles")
 @RequiredArgsConstructor
-class AdminController {
+public class AdminController {
 
     private final AdminService adminService;
 

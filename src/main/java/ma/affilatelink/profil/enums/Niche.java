@@ -1,4 +1,4 @@
-package ma.affilatelink.profil;
+package ma.affilatelink.profil.enums;
 
 public enum Niche {
     BEAUTY,

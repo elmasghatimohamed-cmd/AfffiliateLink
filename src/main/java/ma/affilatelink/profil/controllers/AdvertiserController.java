@@ -1,8 +1,11 @@
 
-package ma.affilatelink.profil;
+package ma.affilatelink.profil.controllers;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import ma.affilatelink.profil.dto.AdvertiserRequest;
+import ma.affilatelink.profil.dto.AdvertiserResponse;
+import ma.affilatelink.profil.services.AdvertiserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

@@ -1,16 +1,15 @@
-package ma.affilatelink.profil;
+package ma.affilatelink.profil.entities;
 
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
+import ma.affilatelink.profil.enums.Niche;
 
 @Entity
-@Setter
 @Getter
 @NoArgsConstructor
 @Table(name = "publisher")
-class Publisher extends Profile {
+public class Publisher extends Profile {
 
     @Column(name  = "firstname", nullable = false)
     private String firstname;
@@ -25,7 +24,7 @@ class Publisher extends Profile {
     private String country;
 
 
-    Publisher(String firstname, String lastname, Niche niche, String bio, String country, String email) {
+    public Publisher(String firstname, String lastname, Niche niche, String bio, String country, String email) {
         super(email);
         this.firstname = firstname;
         this.lastname = lastname;

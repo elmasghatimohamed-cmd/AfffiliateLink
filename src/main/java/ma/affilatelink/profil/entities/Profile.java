@@ -1,23 +1,22 @@
-package ma.affilatelink.profil;
+package ma.affilatelink.profil.entities;
 
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.time.LocalDateTime;
 
 
-import ma.affilatelink.common.InvalidProfileStatusException;
+import ma.affilatelink.common.exceptions.InvalidProfileStatusException;
+import ma.affilatelink.profil.enums.ProfileStatus;
 
 
 @Entity
-@Setter
 @Getter
 @NoArgsConstructor
 @Table(name = "profile")
 @Inheritance(strategy = InheritanceType.JOINED)
-abstract class Profile {
+public abstract class Profile {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -40,7 +39,7 @@ abstract class Profile {
 
 
 
-    void activate() {
+    public void activate() {
         if (status != ProfileStatus.PENDING
                 && status != ProfileStatus.SUSPENDED) {
             throw new InvalidProfileStatusException(
@@ -51,7 +50,7 @@ abstract class Profile {
         this.status = ProfileStatus.ACTIVE;
     }
 
-    void suspend() {
+    public void suspend() {
         if (status != ProfileStatus.ACTIVE) {
             throw new InvalidProfileStatusException(
                     "Cannot suspend a profile with status: " + status

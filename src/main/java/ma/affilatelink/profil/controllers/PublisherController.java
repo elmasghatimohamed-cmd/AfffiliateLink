@@ -1,6 +1,9 @@
-package ma.affilatelink.profil;
+package ma.affilatelink.profil.controllers;
 
 import lombok.RequiredArgsConstructor;
+import ma.affilatelink.profil.dto.PublisherRequest;
+import ma.affilatelink.profil.dto.PublisherResponse;
+import ma.affilatelink.profil.services.PublisherService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;

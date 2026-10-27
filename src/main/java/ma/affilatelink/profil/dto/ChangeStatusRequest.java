@@ -1,9 +1,10 @@
 
-package ma.affilatelink.profil;
+package ma.affilatelink.profil.dto;
 
 import jakarta.validation.constraints.NotNull;
+import ma.affilatelink.profil.enums.ProfileStatus;
 
-record ChangeStatusRequest(
+public record ChangeStatusRequest(
         @NotNull(message = "Status is required")
         ProfileStatus status
 ) {}
