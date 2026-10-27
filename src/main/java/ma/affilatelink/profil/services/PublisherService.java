@@ -1,7 +1,13 @@
-package ma.affilatelink.profil;
+
+package ma.affilatelink.profil.services;
 
 import lombok.RequiredArgsConstructor;
-import ma.affilatelink.common.EmailAlreadyExistsException;
+import ma.affilatelink.common.exceptions.EmailAlreadyExistsException;
+import ma.affilatelink.profil.dto.PublisherRequest;
+import ma.affilatelink.profil.dto.PublisherResponse;
+import ma.affilatelink.profil.entities.Publisher;
+import ma.affilatelink.profil.repositories.ProfileRepository;
+import ma.affilatelink.profil.repositories.PublisherRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +27,7 @@ public class PublisherService {
         if (profileRepository.existsByEmail(request.email())) {
             throw new EmailAlreadyExistsException(request.email());
         }
+
         Publisher publisher = new Publisher(
                 request.firstname(),
                 request.lastname(),
@@ -32,34 +39,14 @@ public class PublisherService {
 
         publisher = publisherRepository.save(publisher);
 
-        return new PublisherResponse(
-                publisher.getId(),
-                publisher.getEmail(),
-                publisher.getStatus(),
-                publisher.getCreatedAt(),
-                publisher.getFirstname(),
-                publisher.getLastname(),
-                publisher.getNiche(),
-                publisher.getBio(),
-                publisher.getCountry()
-        );
+        return toResponse(publisher);
     }
 
     @Transactional(readOnly = true)
     public List<PublisherResponse> findAll() {
         return publisherRepository.findAll()
                 .stream()
-                .map(publisher -> new PublisherResponse(
-                        publisher.getId(),
-                        publisher.getEmail(),
-                        publisher.getStatus(),
-                        publisher.getCreatedAt(),
-                        publisher.getFirstname(),
-                        publisher.getLastname(),
-                        publisher.getNiche(),
-                        publisher.getBio(),
-                        publisher.getCountry()
-                ))
+                .map(this::toResponse)
                 .toList();
     }
 
@@ -70,6 +57,10 @@ public class PublisherService {
                         new NoSuchElementException("Publisher not found with id: " + id)
                 );
 
+        return toResponse(publisher);
+    }
+
+    private PublisherResponse toResponse(Publisher publisher) {
         return new PublisherResponse(
                 publisher.getId(),
                 publisher.getEmail(),

@@ -1,11 +1,12 @@
-package ma.affilatelink.profil;
+package ma.affilatelink.profil.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import ma.affilatelink.profil.enums.Niche;
 
-record PublisherRequest(
+public record PublisherRequest(
 
         @NotBlank(message = "Email is required")
         @Email(message = "Email must be valid")

@@ -1,5 +1,5 @@
 
-package ma.affilatelink.common;
+package ma.affilatelink.common.exceptions;
 
 public class InvalidProfileStatusException
         extends RuntimeException {

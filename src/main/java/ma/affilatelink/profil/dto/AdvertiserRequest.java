@@ -1,12 +1,12 @@
 
-package ma.affilatelink.profil;
+package ma.affilatelink.profil.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import org.hibernate.validator.constraints.URL;
 
-record AdvertiserRequest(
+public record AdvertiserRequest(
 
         @NotBlank(message = "Email is required")
         @Email(message = "Email must be valid")
