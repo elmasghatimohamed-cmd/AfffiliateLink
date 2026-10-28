@@ -4,6 +4,9 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import ma.affilatelink.offer.enums.CampaignStatus;
+import ma.affilatelink.offer.enums.PayoutModel;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
@@ -29,14 +32,16 @@ public class Campaign {
     @Column(name = "budget", nullable = false, precision = 12, scale = 2)
     private BigDecimal budget;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "payout_model", nullable = false, length = 50)
-    private String payoutModel;
+    private PayoutModel payoutModel;
 
     @Column(name = "payout_value", nullable = false, precision = 12, scale = 2)
     private BigDecimal payoutValue;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 50)
-    private String status;
+    private CampaignStatus status;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "offer_id", nullable = false)
@@ -46,8 +51,9 @@ public class Campaign {
              LocalDate startDate,
              LocalDate endDate,
              BigDecimal budget,
-             String payoutModel,
-             BigDecimal payoutValue, String status,
+             PayoutModel payoutModel,
+             BigDecimal payoutValue,
+             CampaignStatus status,
              Offer offer
     ) {
         this.name = name;
