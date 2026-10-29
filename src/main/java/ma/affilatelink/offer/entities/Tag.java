@@ -23,7 +23,7 @@ public class Tag {
     @ManyToMany(mappedBy = "tags")
     private Set<Offer> offers = new HashSet<>();
 
-    Tag(String name) {
+    public Tag(String name) {
         this.name = name;
     }
 }
