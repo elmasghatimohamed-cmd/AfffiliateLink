@@ -3,6 +3,7 @@ package ma.affilatelink.offer.entities;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.AccessLevel;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -10,7 +11,7 @@ import java.util.Set;
 
 @Entity
 @Getter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "offers")
 public class Offer {
 
@@ -44,9 +45,21 @@ public class Offer {
     )
     private Set<Tag> tags = new HashSet<>();
 
-    Offer(Long advertiserId, String title, String description,
+    public Offer(Long advertiserId, String title, String description,
           String landingUrl, String niche) {
         this.advertiserId = advertiserId;
+        this.title = title;
+        this.description = description;
+        this.landingUrl = landingUrl;
+        this.niche = niche;
+    }
+
+    public void updateOffer(
+            String title,
+            String description,
+            String landingUrl,
+            String niche
+    ) {
         this.title = title;
         this.description = description;
         this.landingUrl = landingUrl;
