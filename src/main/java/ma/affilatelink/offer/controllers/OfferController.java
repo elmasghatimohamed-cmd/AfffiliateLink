@@ -1,19 +1,19 @@
-
 package ma.affilatelink.offer.controllers;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import ma.affilatelink.common.ApiResponse;
 import ma.affilatelink.offer.dto.CreateOfferRequest;
 import ma.affilatelink.offer.dto.OfferResponse;
 import ma.affilatelink.offer.dto.UpdateOfferRequest;
 import ma.affilatelink.offer.services.OfferService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
-import java.util.List;
+import org.springframework.data.domain.Pageable;
 
 @RestController
 @RequestMapping("/api/offers")
@@ -39,21 +39,33 @@ public class OfferController {
         return ResponseEntity.ok(offerService.updateOffer(id, request));
     }
 
+
     @GetMapping
-    public ResponseEntity<List<OfferResponse>> getAllOffers() {
-        return ResponseEntity.ok(offerService.getAllOffers());
+    public Page<OfferResponse> searchOffers(
+            @RequestParam(required = false) String niche,
+            @RequestParam(required = false) Long advertiserId,
+            @RequestParam(required = false) String tag,
+            @RequestParam(required = false) String keyword,
+            @PageableDefault(
+                    size = 20,
+                    sort = "createdAt",
+                    direction = Sort.Direction.DESC
+            ) Pageable pageable
+    ) {
+        return offerService.searchOffers(
+                niche,
+                advertiserId,
+                tag,
+                keyword,
+                pageable
+        );
     }
+
 
     @GetMapping("/{id}")
     public ResponseEntity<OfferResponse> getOfferById(
             @PathVariable Long id
     ) {
         return ResponseEntity.ok(offerService.getOfferById(id));
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteOffer(@PathVariable Long id) {
-        offerService.deleteOffer(id);
-        return ResponseEntity.noContent().build();
     }
 }

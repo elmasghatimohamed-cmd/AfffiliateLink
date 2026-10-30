@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import lombok.Setter;
 import ma.affilatelink.offer.enums.CampaignStatus;
 import ma.affilatelink.offer.enums.PayoutModel;
 
@@ -39,6 +40,7 @@ public class Campaign {
     @Column(name = "payout_value", nullable = false, precision = 12, scale = 2)
     private BigDecimal payoutValue;
 
+    @Setter
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 50)
     private CampaignStatus status;
@@ -47,7 +49,7 @@ public class Campaign {
     @JoinColumn(name = "offer_id", nullable = false)
     private Offer offer;
 
-    Campaign(String name,
+    public Campaign(String name,
              LocalDate startDate,
              LocalDate endDate,
              BigDecimal budget,

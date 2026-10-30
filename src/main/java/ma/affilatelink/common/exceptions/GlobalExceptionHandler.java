@@ -30,7 +30,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler({
             EmailAlreadyExistsException.class,
-            InvalidProfileStatusException.class
+            InvalidProfileStatusException.class,
+            InvalidCampaignStatusException.class
     })
     public ResponseEntity<ApiResponse> handleConflict(
             RuntimeException exception,
@@ -59,20 +60,27 @@ public class GlobalExceptionHandler {
         return buildError(HttpStatus.BAD_REQUEST, message, request);
     }
 
+
     @ExceptionHandler({
             HttpMessageNotReadableException.class,
-            ConstraintViolationException.class
+            ConstraintViolationException.class,
+            IllegalArgumentException.class
     })
     public ResponseEntity<ApiResponse> handleBadRequest(
             Exception exception,
             HttpServletRequest request
     ) {
+        String message = exception instanceof IllegalArgumentException
+                ? exception.getMessage()
+                : "Invalid request data";
+
         return buildError(
                 HttpStatus.BAD_REQUEST,
-                "Invalid request data",
+                message,
                 request
         );
     }
+
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse> handleGeneral(
