@@ -60,9 +60,11 @@ public class CampaignService {
                 offer
         );
 
-        return campaignMapper.toResponse(
-                campaignRepository.save(campaign)
-        );
+        offer.addCampaign(campaign);
+
+        Campaign savedCampaign = campaignRepository.save(campaign);
+
+        return campaignMapper.toResponse(savedCampaign);
     }
 
     public List<CampaignResponse> getCampaigns(CampaignStatus status) {
@@ -78,18 +80,25 @@ public class CampaignService {
     @Transactional
     public void updateCampaignStatus(
             Long campaignId,
-            CampaignStatus newStatus
+                CampaignStatus newStatus
     ) {
-        Campaign campaign = campaignRepository.findById(campaignId)
-                .orElseThrow(() -> new NoSuchElementException(
-                        "Campaign not found with id: " + campaignId
-                ));
-
         if (newStatus == null) {
             throw new IllegalArgumentException(
                     "Campaign status is required"
             );
         }
+
+        if (newStatus == CampaignStatus.ACTIVE) {
+            offerRepository.findByCampaignIdForUpdate(campaignId)
+                    .orElseThrow(() -> new NoSuchElementException(
+                            "Campaign not found with id: " + campaignId
+                    ));
+        }
+
+        Campaign campaign = campaignRepository.findById(campaignId)
+                .orElseThrow(() -> new NoSuchElementException(
+                        "Campaign not found with id: " + campaignId
+                ));
 
         CampaignStatus currentStatus = campaign.getStatus();
 

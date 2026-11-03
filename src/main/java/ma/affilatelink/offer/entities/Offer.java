@@ -37,6 +37,9 @@ public class Offer {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    @OneToMany(mappedBy = "offer")
+    private Set<Campaign> campaigns = new HashSet<>();
+
     @ManyToMany
     @JoinTable(
             name = "offer_tags",
@@ -64,5 +67,15 @@ public class Offer {
         this.description = description;
         this.landingUrl = landingUrl;
         this.niche = niche;
+    }
+
+    public void addCampaign(Campaign campaign) {
+        campaigns.add(campaign);
+        campaign.setOffer(this);
+    }
+
+    public void removeCampaign(Campaign campaign) {
+        campaigns.remove(campaign);
+        campaign.setOffer(null);
     }
 }

@@ -45,6 +45,7 @@ public class Campaign {
     @Column(name = "status", nullable = false, length = 50)
     private CampaignStatus status;
 
+    @Setter
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "offer_id", nullable = false)
     private Offer offer;
