@@ -1,19 +1,30 @@
-
 spring:
-  application:
-    name: affiliate-link
+  mail:
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 
-  datasource:
+app:
+  mail:
+    from: ${MAIL_FROM:${MAIL_USERNAME}}
+datasource:
     url: jdbc:postgresql://localhost:${POSTGRES_PORT}/${POSTGRES_DB}
     username: ${POSTGRES_USER}
     password: ${POSTGRES_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
-  sql:
+sql:
     init:
       mode: never
 
-  jpa:
+jpa:
     hibernate:
       ddl-auto: validate
     open-in-view: false
@@ -21,7 +32,7 @@ spring:
       hibernate:
         format_sql: true
 
-  flyway:
+flyway:
     enabled: true
 
 server:
