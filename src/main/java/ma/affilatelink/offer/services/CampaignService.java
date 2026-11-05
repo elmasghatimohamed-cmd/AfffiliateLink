@@ -1,7 +1,7 @@
-
 package ma.affilatelink.offer.services;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import ma.affilatelink.common.exceptions.InvalidCampaignStatusException;
 import ma.affilatelink.offer.dto.CampaignCreateRequest;
 import ma.affilatelink.offer.dto.CampaignMapper;
@@ -9,7 +9,6 @@ import ma.affilatelink.offer.dto.CampaignResponse;
 import ma.affilatelink.offer.entities.Campaign;
 import ma.affilatelink.offer.entities.Offer;
 import ma.affilatelink.offer.enums.CampaignStatus;
-import ma.affilatelink.offer.enums.PayoutModel;
 import ma.affilatelink.offer.repositories.CampaignRepository;
 import ma.affilatelink.offer.repositories.OfferRepository;
 import ma.affilatelink.profil.api.ProfileApi;
@@ -20,7 +19,9 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -36,6 +37,7 @@ public class CampaignService {
             Long offerId,
             CampaignCreateRequest request
     ) {
+        log.info("Creating campaign for offer ID: {}", offerId);
         Offer offer = offerRepository.findById(offerId)
                 .orElseThrow(() -> new NoSuchElementException(
                         "Offer not found with id: " + offerId
@@ -64,13 +66,23 @@ public class CampaignService {
 
         Campaign savedCampaign = campaignRepository.save(campaign);
 
+        log.info(
+                "Campaign created successfully with ID: {} for offer ID: {}",
+                savedCampaign.getId(),
+                offerId
+        );
+
         return campaignMapper.toResponse(savedCampaign);
     }
 
     public List<CampaignResponse> getCampaigns(CampaignStatus status) {
+        log.debug("Retrieving campaigns with status filter: {}", status);
+
         List<Campaign> campaigns = status == null
                 ? campaignRepository.findAll()
                 : campaignRepository.findByStatus(status);
+
+        log.debug("Retrieved {} campaigns", campaigns.size());
 
         return campaigns.stream()
                 .map(campaignMapper::toResponse)
@@ -80,8 +92,13 @@ public class CampaignService {
     @Transactional
     public void updateCampaignStatus(
             Long campaignId,
-                CampaignStatus newStatus
+            CampaignStatus newStatus
     ) {
+        log.info(
+                "Updating campaign ID: {} to status: {}",
+                campaignId,
+                newStatus
+        );
         if (newStatus == null) {
             throw new IllegalArgumentException(
                     "Campaign status is required"
@@ -121,12 +138,25 @@ public class CampaignService {
                     CampaignStatus.ACTIVE
             ).filter(activeCampaign ->
                     !activeCampaign.getId().equals(campaign.getId())
-            ).ifPresent(activeCampaign ->
-                    activeCampaign.setStatus(CampaignStatus.PAUSED)
-            );
+            ).ifPresent(activeCampaign -> {
+                activeCampaign.setStatus(CampaignStatus.PAUSED);
+
+                log.info(
+                        "Campaign ID: {} automatically paused because campaign ID: {} is being activated",
+                        activeCampaign.getId(),
+                        campaignId
+                );
+            });
         }
 
         campaign.setStatus(newStatus);
+
+        log.info(
+                "Campaign ID: {} status changed from {} to {}",
+                campaignId,
+                currentStatus,
+                newStatus
+        );
     }
 
     private boolean isAllowedTransition(
