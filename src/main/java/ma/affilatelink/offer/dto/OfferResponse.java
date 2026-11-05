@@ -1,7 +1,7 @@
-
 package ma.affilatelink.offer.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 
 public record OfferResponse(
@@ -12,5 +12,6 @@ public record OfferResponse(
         String landingUrl,
         String niche,
         LocalDateTime createdAt,
-        Set<String> tags
+        Set<String> tags,
+        List<CampaignResponse> campaigns
 ) {}
