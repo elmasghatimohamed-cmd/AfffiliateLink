@@ -2,6 +2,7 @@
 package ma.affilatelink.offer.services;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import ma.affilatelink.offer.dto.CreateOfferRequest;
 import ma.affilatelink.offer.dto.OfferMapper;
 import ma.affilatelink.offer.dto.OfferResponse;
@@ -12,7 +13,6 @@ import ma.affilatelink.offer.repositories.OfferRepository;
 import ma.affilatelink.offer.repositories.OfferSpecifications;
 import ma.affilatelink.offer.repositories.TagRepository;
 
-import java.util.List;
 import java.util.NoSuchElementException;
 import ma.affilatelink.profil.api.ProfileApi;
 import org.springframework.stereotype.Service;
@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -36,6 +37,7 @@ public class OfferService {
 
     @Transactional
     public OfferResponse createOffer(CreateOfferRequest request) {
+        log.info("Creating offer for advertiser ID: {}", request.advertiserId());
         if (!profileApi.isAdvertiserActive(request.advertiserId())) {
             throw new NoSuchElementException(
                     "Advertiser is not active or does not exist"
@@ -46,12 +48,13 @@ public class OfferService {
         offer.getTags().addAll(resolveTags(request.tags()));
 
         Offer savedOffer = offerRepository.save(offer);
-
+        log.info("Offer created successfully with ID: {}", savedOffer.getId());
         return offerMapper.toResponse(savedOffer);
     }
 
     @Transactional
     public OfferResponse updateOffer(Long offerId, UpdateOfferRequest request) {
+        log.info("Updating offer with ID: {}", offerId);
         Offer offer = offerRepository.findById(offerId)
                 .orElseThrow(() -> new NoSuchElementException(
                         "Offer not found with id: " + offerId
@@ -63,7 +66,7 @@ public class OfferService {
         offer.getTags().addAll(resolveTags(request.tags()));
 
         Offer savedOffer = offerRepository.save(offer);
-
+        log.info("Offer updated successfully with ID: {}", savedOffer.getId());
         return offerMapper.toResponse(savedOffer);
     }
 
@@ -81,6 +84,7 @@ public class OfferService {
     }
 
     public OfferResponse getOfferById(Long offerId) {
+        log.debug("Retrieving offer with ID: {}", offerId);
         Offer offer = offerRepository.findById(offerId)
                 .orElseThrow(() -> new NoSuchElementException(
                         "Offer not found with id: " + offerId
@@ -97,6 +101,13 @@ public class OfferService {
             String keyword,
             Pageable pageable
     ) {
+        log.debug(
+                "Searching offers with niche: {}, advertiserId: {}, tag: {}, keyword: {}",
+                niche,
+                advertiserId,
+                tag,
+                keyword
+        );
         return offerRepository.findAll(
                 OfferSpecifications.withFilters(
                         niche,

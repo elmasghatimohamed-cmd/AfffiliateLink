@@ -10,10 +10,13 @@ import ma.affilatelink.offer.enums.PayoutModel;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import jakarta.validation.constraints.AssertTrue;
+import jakarta.validation.constraints.Size;
 
 public record CampaignCreateRequest(
 
-        @NotBlank
+        @NotBlank(message = "Campaign name is required")
+        @Size(max = 255, message = "Campaign name must not exceed 255 characters")
         String name,
 
         @NotNull
@@ -36,4 +39,10 @@ public record CampaignCreateRequest(
         BigDecimal payoutValue
 
 ) {
+        @AssertTrue(message = "End date must be after start date")
+        public boolean isDateRangeValid() {
+                return startDate == null
+                        || endDate == null
+                        || endDate.isAfter(startDate);
+        }
 }

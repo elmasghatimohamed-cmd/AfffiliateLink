@@ -1,7 +1,18 @@
-
 spring:
   application:
     name: affiliate-link
+
+  mail:
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 
   datasource:
     url: jdbc:postgresql://localhost:${POSTGRES_PORT}/${POSTGRES_DB}
@@ -23,6 +34,17 @@ spring:
 
   flyway:
     enabled: true
+
+logging:
+  level:
+    root: INFO
+    ma.affilatelink: DEBUG
+  file:
+    name: logs/affilatelink.log
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 30
 
 server:
   port: 8080

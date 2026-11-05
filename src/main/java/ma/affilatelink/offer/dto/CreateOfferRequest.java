@@ -4,12 +4,14 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import org.hibernate.validator.constraints.URL;
+import jakarta.validation.constraints.Positive;
 
 import java.util.Set;
 
 public record CreateOfferRequest(
 
         @NotNull(message = "Advertiser ID is required")
+        @Positive(message = "Advertiser ID must be positive")
         Long advertiserId,
 
         @NotBlank(message = "Title is required")
