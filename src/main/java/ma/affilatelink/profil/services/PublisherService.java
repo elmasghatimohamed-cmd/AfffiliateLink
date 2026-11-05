@@ -1,7 +1,7 @@
-
 package ma.affilatelink.profil.services;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import ma.affilatelink.common.exceptions.EmailAlreadyExistsException;
 import ma.affilatelink.profil.dto.PublisherRequest;
 import ma.affilatelink.profil.dto.PublisherResponse;
@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PublisherService {
@@ -23,8 +24,11 @@ public class PublisherService {
 
     @Transactional
     public PublisherResponse create(PublisherRequest request) {
+        log.info("Creating publisher profile");
 
         if (profileRepository.existsByEmail(request.email())) {
+            log.warn("Publisher creation rejected: email already exists");
+
             throw new EmailAlreadyExistsException(request.email());
         }
 
@@ -39,22 +43,37 @@ public class PublisherService {
 
         publisher = publisherRepository.save(publisher);
 
+        log.info(
+                "Publisher profile created successfully with ID: {}",
+                publisher.getId()
+        );
+
         return toResponse(publisher);
     }
 
     @Transactional(readOnly = true)
     public List<PublisherResponse> findAll() {
-        return publisherRepository.findAll()
+        log.debug("Retrieving all publisher profiles");
+
+        List<PublisherResponse> publishers = publisherRepository.findAll()
                 .stream()
                 .map(this::toResponse)
                 .toList();
+
+        log.debug("Retrieved {} publisher profiles", publishers.size());
+
+        return publishers;
     }
 
     @Transactional(readOnly = true)
     public PublisherResponse findById(Long id) {
+        log.debug("Retrieving publisher profile with ID: {}", id);
+
         Publisher publisher = publisherRepository.findById(id)
                 .orElseThrow(() ->
-                        new NoSuchElementException("Publisher not found with id: " + id)
+                        new NoSuchElementException(
+                                "Publisher not found with id: " + id
+                        )
                 );
 
         return toResponse(publisher);
