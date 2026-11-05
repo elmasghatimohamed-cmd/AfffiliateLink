@@ -234,4 +234,10 @@ public class CampaignService {
             }
         }
     }
+    public Optional<CampaignResponse> getCampaign(Long campaignId) {
+        log.debug("Retrieving campaign with ID: {}", campaignId);
+
+        return campaignRepository.findById(campaignId)
+                .map(campaignMapper::toResponse);
+    }
 }
