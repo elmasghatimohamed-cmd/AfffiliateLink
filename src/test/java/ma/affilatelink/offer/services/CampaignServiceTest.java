@@ -519,7 +519,7 @@ class CampaignServiceTest {
 
         verify(campaignRepository).save(any(Campaign.class));
     }
-    
+
     private Campaign mockCampaign(CampaignStatus status) {
         Campaign campaign = mock(Campaign.class);
 
