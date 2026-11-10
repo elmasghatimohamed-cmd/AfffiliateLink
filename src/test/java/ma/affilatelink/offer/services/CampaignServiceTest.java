@@ -2,6 +2,7 @@ package ma.affilatelink.offer.services;
 
 import ma.affilatelink.common.exceptions.InvalidCampaignStatusException;
 import ma.affilatelink.offer.dto.CampaignCreateRequest;
+import ma.affilatelink.offer.dto.CampaignResponse;
 import ma.affilatelink.offer.dto.CampaignMapper;
 import ma.affilatelink.offer.entities.Campaign;
 import ma.affilatelink.offer.entities.Offer;
@@ -25,6 +26,7 @@ import java.time.LocalDate;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.stream.Stream;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -519,6 +521,118 @@ class CampaignServiceTest {
 
         verify(campaignRepository).save(any(Campaign.class));
     }
+
+
+    @Test
+    void shouldRejectCampaignCreationForInactiveAdvertiser() {
+        when(offerRepository.findById(OFFER_ID))
+                .thenReturn(Optional.of(offer));
+
+        when(offer.getAdvertiserId()).thenReturn(ADVERTISER_ID);
+
+        when(profileApi.isAdvertiserActive(ADVERTISER_ID))
+                .thenReturn(false);
+
+        NoSuchElementException exception = assertThrows(
+                NoSuchElementException.class,
+                () -> campaignService.createCampaign(
+                        OFFER_ID,
+                        request(
+                                "Campaign",
+                                validStartDate(),
+                                validEndDate(),
+                                BigDecimal.valueOf(100),
+                                PayoutModel.CPC,
+                                BigDecimal.valueOf(5)
+                        )
+                )
+        );
+
+        assertEquals(
+                "Advertiser is not active or does not exist",
+                exception.getMessage()
+        );
+
+        verify(campaignRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldReturnAllCampaignsWhenStatusIsNull() {
+        Campaign campaign = mock(Campaign.class);
+        CampaignResponse response = mock(CampaignResponse.class);
+
+        when(campaignRepository.findAll())
+                .thenReturn(List.of(campaign));
+
+        when(campaignMapper.toResponse(campaign))
+                .thenReturn(response);
+
+        List<CampaignResponse> result =
+                campaignService.getCampaigns(null);
+
+        assertEquals(List.of(response), result);
+
+        verify(campaignRepository).findAll();
+        verify(campaignRepository, never()).findByStatus(any());
+        verify(campaignMapper).toResponse(campaign);
+    }
+
+    @Test
+    void shouldReturnCampaignsFilteredByStatus() {
+        Campaign campaign = mock(Campaign.class);
+        CampaignResponse response = mock(CampaignResponse.class);
+
+        when(campaignRepository.findByStatus(CampaignStatus.ACTIVE))
+                .thenReturn(List.of(campaign));
+
+        when(campaignMapper.toResponse(campaign))
+                .thenReturn(response);
+
+        List<CampaignResponse> result =
+                campaignService.getCampaigns(CampaignStatus.ACTIVE);
+
+        assertEquals(List.of(response), result);
+
+        verify(campaignRepository).findByStatus(CampaignStatus.ACTIVE);
+        verify(campaignRepository, never()).findAll();
+        verify(campaignMapper).toResponse(campaign);
+    }
+
+    @Test
+    void shouldReturnCampaignWhenItExists() {
+        Campaign campaign = mock(Campaign.class);
+        CampaignResponse response = mock(CampaignResponse.class);
+
+        when(campaignRepository.findById(CAMPAIGN_ID))
+                .thenReturn(Optional.of(campaign));
+
+        when(campaignMapper.toResponse(campaign))
+                .thenReturn(response);
+
+        Optional<CampaignResponse> result =
+                campaignService.getCampaign(CAMPAIGN_ID);
+
+        assertTrue(result.isPresent());
+        assertEquals(response, result.get());
+
+        verify(campaignRepository).findById(CAMPAIGN_ID);
+        verify(campaignMapper).toResponse(campaign);
+    }
+
+    @Test
+    void shouldReturnEmptyWhenCampaignDoesNotExist() {
+        when(campaignRepository.findById(CAMPAIGN_ID))
+                .thenReturn(Optional.empty());
+
+        Optional<CampaignResponse> result =
+                campaignService.getCampaign(CAMPAIGN_ID);
+
+        assertTrue(result.isEmpty());
+
+        verify(campaignRepository).findById(CAMPAIGN_ID);
+        verifyNoInteractions(campaignMapper);
+    }
+
 
     private Campaign mockCampaign(CampaignStatus status) {
         Campaign campaign = mock(Campaign.class);
