@@ -1,10 +1,18 @@
-# AffiliateLink — Profile Module
+# AffiliateLink – Profile, Offer & Campaign Management Platform
 
-## 1. Overview
+## Overview
 
-AffiliateLink is a Spring Boot REST API for managing user profiles, including Publishers and Advertisers, with administrative profile-status management.
+AffiliateLink is a REST API built with Spring Boot for managing an affiliate marketing platform.
 
-### Technology stack
+The application handles three main areas:
+
+- **Profiles:** Publisher and Advertiser registration, retrieval, and administrative status management.
+- **Offers:** Offer creation, updating, retrieval, and filtered discovery.
+- **Campaigns:** Campaign creation, retrieval, and lifecycle management.
+
+The application follows a modular architecture using Spring Modulith to separate Profile and Offer responsibilities while allowing them to communicate through explicit module APIs and application events.
+
+## Technology Stack
 
 - Java 17
 - Spring Boot 4.1.1
@@ -12,49 +20,67 @@ AffiliateLink is a Spring Boot REST API for managing user profiles, including Pu
 - Spring Data JPA
 - PostgreSQL 16
 - Flyway
+- Spring Modulith
 - Maven
 - Docker Compose
+- Testcontainers
+- JUnit 5 and Mockito
+- JaCoCo
+- SonarQube
 
-## 2. Prerequisites
+## Architecture
 
-Install the following tools:
+The application is organized into modules:
+
+- **Profile module:** Manages publishers, advertisers, and administrative profile operations.
+- **Offer module:** Manages offers, campaigns, and publisher notifications.
+- **Common package:** Contains shared API and exception-handling components.
+
+Each module exposes a public API for communication with other modules. Service contracts are separated from their implementations, allowing controllers and other consumers to depend on interfaces rather than concrete classes.
+
+The Profile module also publishes a `ProfileSuspended` event. The Offer module listens for this event and handles the corresponding campaign suspension workflow.
+
+## Prerequisites
+
+Before running the application, make sure you have:
 
 - JDK 17
 - Docker Desktop with Docker Compose
+- Git
 - PowerShell or another terminal
 
-## 3. Environment configuration
+Docker must be running when executing integration tests that use Testcontainers.
 
-The project uses a `.env` file to configure PostgreSQL.
+## Configuration
 
-Example configuration:
+### Environment variables
 
-```dotenv
+Create a `.env` file in the project root:
+
+```env
 POSTGRES_DB=DB-NAME
 POSTGRES_USER=USER-NAME
-POSTGRES_PASSWORD=USER-PASSWORD
-POSTGRES_PORT=5431
+POSTGRES_PASSWORD=DB-PASSWORD
+POSTGRES_PORT=5432
 ```
 
-Replace `your_local_password` with your local database password.
+### Database configuration
 
-**Security:** Do not commit real passwords or other secrets to version control.
-
-The application connects to PostgreSQL using the following URL pattern:
+The application connects to PostgreSQL using:
 
 ```text
 jdbc:postgresql://localhost:${POSTGRES_PORT}/${POSTGRES_DB}
 ```
 
-## 4. Start PostgreSQL
+Docker Compose runs PostgreSQL 16 and exposes the database through the configured host port. Database data is persisted using the `postgres_data` volume.
 
-From the project root, run:
+### Start PostgreSQL
 
 ```powershell
 docker compose up -d
 ```
 
-Verify the container status:
+Check the container status:
 
 ```powershell
 docker compose ps
@@ -66,102 +92,62 @@ Validate the Compose configuration:
 docker compose config --quiet
 ```
 
-The PostgreSQL service uses the `postgres:16` image and exposes the configured host port, `5431` by default in the local environment.
+## Running the Application
 
-The named volume `postgres_data` persists database data across ordinary container restarts and recreation.
-
-## 5. Database initialization and migrations
-
-Flyway manages the database schema.
-
-The initial migration is located at:
-
-```text
-src/main/resources/db/migration/V1__create_profile_tables.sql
-```
-
-It creates the following tables:
-
-- `profile`: shared profile attributes, including email, status and creation timestamp.
-- `publisher`: publisher-specific attributes.
-- `advertiser`: advertiser-specific attributes.
-
-The subtype tables use their `id` columns as both primary keys and foreign keys referencing `profile(id)`.
-
-The database enforces email uniqueness, required fields, primary keys and foreign-key relationships.
-
-Flyway is enabled through `application.yaml`:
-
-```yaml
-spring:
-  flyway:
-    enabled: true
-
-  jpa:
-    hibernate:
-      ddl-auto: validate
-```
-
-Flyway applies versioned migrations. Hibernate validates the resulting schema against the entity mappings rather than creating or modifying the schema automatically.
-
-## 6. Run the application
-
-### Run with Maven
+Start the application with Maven:
 
 ```powershell
-.\mvnw.cmd spring-boot:run
+mvn spring-boot:run
 ```
 
-### Build the executable JAR
+The default application port is `8080`.
+
+To use another port:
 
 ```powershell
-.\mvnw.cmd clean package
+mvn spring-boot:run "-Dspring-boot.run.arguments=--server.port=YOUR-DESIRED-PORT"
 ```
 
-The executable artifact is:
+### Build the application
 
-```text
-target/AffiliateLink-0.0.1-SNAPSHOT.jar
+```powershell
+mvn clean package
 ```
 
-Run the packaged application:
+Run the generated JAR:
 
 ```powershell
 java -jar target/AffiliateLink-0.0.1-SNAPSHOT.jar
 ```
 
-By default, the application listens on port `8080`.
+## REST API
 
-To use another port:
+Base URL:
 
-```powershell
-java -jar target/AffiliateLink-0.0.1-SNAPSHOT.jar --server.port=8081
+```text
+http://localhost:8080
 ```
 
-Ensure the PostgreSQL container is running and the required environment variables are available to the application process.
+### 1. Profile Management
 
-## 7. REST API endpoints
+The Profile module manages Publisher and Advertiser profiles.
 
-The Profile module exposes seven endpoints.
+#### Publisher endpoints
 
-| Method | Endpoint | Purpose |
-|---|---|---|
-| GET | `/api/publishers` | Retrieve publishers |
-| GET | `/api/publishers/{id}` | Retrieve a publisher by ID |
-| POST | `/api/publishers` | Create a publisher |
-| GET | `/api/advertisers` | Retrieve advertisers |
-| GET | `/api/advertisers/{id}` | Retrieve an advertiser by ID |
-| POST | `/api/advertisers` | Create an advertiser |
-| PATCH | `/api/admin/profiles/{id}/status` | Change a profile's status |
+| Method | Endpoint | Description | Success |
+|---|---|---|---|
+| GET | `/api/publishers` | Retrieve all publishers | 200 |
+| GET | `/api/publishers/{id}` | Retrieve a publisher by ID | 200 |
+| POST | `/api/publishers` | Register a publisher | 201 |
 
-### Publisher creation
-
-Example request:
+**Create a publisher**
 
 ```http
 POST /api/publishers
 Content-Type: application/json
 ```
+
+Request body:
 
 ```json
 {
@@ -174,14 +160,24 @@ Content-Type: application/json
 }
 ```
 
-### Advertiser creation
+The `niche` field must contain a valid value from the `Niche` enum.
 
-Example request:
+#### Advertiser endpoints
+
+| Method | Endpoint | Description | Success |
+|---|---|---|---|
+| GET | `/api/advertisers` | Retrieve all advertisers | 200 |
+| GET | `/api/advertisers/{id}` | Retrieve an advertiser by ID | 200 |
+| POST | `/api/advertisers` | Register an advertiser | 201 |
+
+**Create an advertiser**
 
 ```http
 POST /api/advertisers
 Content-Type: application/json
 ```
+
+Request body:
 
 ```json
 {
@@ -192,92 +188,326 @@ Content-Type: application/json
 }
 ```
 
-### Change profile status
+#### Administrative profile management
 
-Example request:
+| Method | Endpoint | Description | Success |
+|---|---|---|---|
+| PATCH | `/api/admin/profiles/{id}/status` | Change a profile's status | 204 |
+
+**Change profile status**
 
 ```http
-PATCH /api/admin/profiles/13/status
+PATCH /api/admin/profiles/1/status
 Content-Type: application/json
 ```
 
+Request body:
+
 ```json
 {
-  "status": "INACTIVE"
+  "status": "SUSPENDED"
 }
 ```
 
-Use the status values and permitted transitions defined by the application's `ProfileStatus` and `AdminService` implementation. Invalid transitions are rejected.
+The status must be a valid value from the `ProfileStatus` enum. Profile status transitions are handled by the administrative service.
 
-## 8. Error handling
+### 2. Offer Management
 
-The application centralizes exception handling through `GlobalExceptionHandler`.
+The Offer module allows advertisers to create and maintain offers, while users can discover offers through filtering and pagination.
 
-The API handles cases including:
+#### Offer endpoints
 
-- Invalid creation requests.
-- Profiles that do not exist.
-- Duplicate emails across profile types.
-- Invalid profile-status transitions.
-- Unexpected server errors.
+| Method | Endpoint | Description | Success |
+|---|---|---|---|
+| POST | `/api/offers` | Create an offer | 201 |
+| GET | `/api/offers` | Search and retrieve offers | 200 |
+| GET | `/api/offers/{id}` | Retrieve an offer by ID | 200 |
+| PUT | `/api/offers/{id}` | Update an offer | 200 |
 
-For example, requesting a nonexistent publisher:
+**Create an offer**
 
 ```http
-GET /api/publishers/999
+POST /api/offers
+Content-Type: application/json
 ```
 
-returns `404 Not Found` with a message identifying the missing publisher.
+Request body:
 
-The exact response structure and status codes should follow the implemented exception handler and validated API behavior.
+```json
+{
+  "advertiserId": 19,
+  "title": "Beauty Essentials",
+  "description": "Essential products for everyday care.",
+  "landingUrl": "https://example.com/beauty",
+  "niche": "BEAUTY",
+  "tags": [
+    "Makeup",
+    "Wellness"
+  ]
+}
+```
 
-## 9. Verification and delivery
+The request requires a positive advertiser ID, a title, description, valid landing URL, niche, and tags.
 
-The following checks have been completed during validation of the Profile module:
+**Update an offer**
 
-- All seven endpoints and the required business-rule scenarios were tested under Ticket 06.1.
-- PostgreSQL connectivity was verified.
-- The packaged JAR was started successfully.
-- Flyway applied migration V1 to a separate, initially empty test database.
-- Hibernate initialized successfully with `ddl-auto: validate`.
-- Primary keys, the unique email constraint, required fields and subtype foreign keys were inspected.
-- Docker Compose configuration validation completed without errors.
+```http
+PUT /api/offers/9
+Content-Type: application/json
+```
 
-The clean-database test used `affiliatelink_clean_test`, leaving the original `affiliatelink_db` intact.
+Request body:
 
-## 10. Project structure
+```json
+{
+  "title": "Updated Beauty Essentials",
+  "description": "Updated offer description.",
+  "landingUrl": "https://example.com/updated-beauty",
+  "niche": "BEAUTY",
+  "tags": [
+    "Makeup",
+    "Skincare"
+  ]
+}
+```
+
+**Search offers**
+
+```http
+GET /api/offers
+```
+
+Supported query parameters:
+
+| Parameter | Type | Description |
+|---|---|---|
+| `niche` | String | Filter offers by niche |
+| `advertiserId` | Long | Filter by advertiser |
+| `tag` | String | Filter by tag |
+| `keyword` | String | Search using a keyword |
+| `page` | Integer | Page number |
+| `size` | Integer | Number of results per page |
+| `sort` | String | Sorting criteria |
+
+Default pagination:
+
+- Page size: `20`
+- Sort field: `createdAt`
+- Sort direction: `DESC`
+
+Example:
+
+```http
+GET /api/offers?niche=BEAUTY&advertiserId=19&tag=Makeup&keyword=beauty&page=0&size=10&sort=createdAt,desc
+```
+
+**Retrieve an offer**
+
+```http
+GET /api/offers/9
+```
+
+An offer response contains its ID, advertiser ID, title, description, landing URL, niche, creation date, tags, and associated campaigns.
+
+### 3. Campaign Management
+
+Campaigns are associated with offers and contain scheduling, budget, and payout information.
+
+#### Campaign endpoints
+
+| Method | Endpoint | Description | Success |
+|---|---|---|---|
+| POST | `/api/offres/{id}/campaigns` | Create a campaign for an offer | 201 |
+| GET | `/api/campaigns` | Retrieve campaigns, optionally filtered by status | 200 |
+| PATCH | `/api/campaigns/{id}/status` | Update a campaign's status | 204 |
+
+**Create a campaign**
+
+```http
+POST /api/offres/9/campaigns
+Content-Type: application/json
+```
+
+Request body:
+
+```json
+{
+  "name": "Summer Promotion",
+  "startDate": "2026-12-01",
+  "endDate": "2026-12-31",
+  "budget": 10000.00,
+  "payoutModel": "<VALID_PAYOUT_MODEL>",
+  "payoutValue": 25.00
+}
+```
+
+The request requires:
+
+- A campaign name.
+- A start date and an end date.
+- A positive budget.
+- A valid payout model.
+- A non-negative payout value.
+
+The end date must be after the start date.
+
+Replace `<VALID_PAYOUT_MODEL>` with a value supported by the application's `PayoutModel` enum.
+
+**Retrieve campaigns**
+
+```http
+GET /api/campaigns
+```
+
+Campaigns can optionally be filtered by status:
+
+```http
+GET /api/campaigns?status=ACTIVE
+```
+
+The status parameter is case-insensitive and must match a value from the `CampaignStatus` enum.
+
+**Update campaign status**
+
+```http
+PATCH /api/campaigns/2/status
+Content-Type: application/json
+```
+
+Request body:
+
+```json
+{
+  "status": "PAUSED"
+}
+```
+
+The campaign status must be a valid `CampaignStatus` value. Invalid lifecycle transitions are rejected by the campaign service.
+
+## Database Migrations
+
+Flyway manages database schema changes.
+
+Migration scripts are located in:
 
 ```text
-src/main/java/ma/affilatelink/
-├── common/
-│   ├── ApiResponse.java
-│   ├── EmailAlreadyExistsException.java
-│   ├── GlobalExceptionHandler.java
-│   └── InvalidProfileStatusException.java
-├── profil/
-│   ├── AdminController.java
-│   ├── AdminService.java
-│   ├── Advertiser.java
-│   ├── AdvertiserController.java
-│   ├── AdvertiserRepository.java
-│   ├── AdvertiserRequest.java
-│   ├── AdvertiserResponse.java
-│   ├── AdvertiserService.java
-│   ├── ChangeStatusRequest.java
-│   ├── Niche.java
-│   ├── Profile.java
-│   ├── ProfileRepository.java
-│   ├── ProfileStatus.java
-│   ├── Publisher.java
-│   ├── PublisherController.java
-│   ├── PublisherRepository.java
-│   ├── PublisherRequest.java
-│   ├── PublisherResponse.java
-│   └── PublisherService.java
-└── AffiliateLinkApplication.java
-
-src/main/resources/
-├── application.yaml
-└── db/migration/
-    └── V1__create_profile_tables.sql
+src/main/resources/db/migration/
 ```
+
+The initial profile migration is:
+
+```text
+V1__create_profile_tables.sql
+```
+
+It creates the profile-related tables:
+
+- `profile`
+- `publisher`
+- `advertiser`
+
+The application uses Flyway to apply migrations and Hibernate's `ddl-auto: validate` setting to validate the entity mappings against the existing schema.
+
+## Error Handling
+
+The application uses a centralized `GlobalExceptionHandler` to handle API errors.
+
+Handled scenarios include:
+
+- Invalid request bodies and validation failures.
+- Missing resources.
+- Duplicate email addresses.
+- Invalid profile or campaign status transitions.
+- Invalid campaign status parameters.
+- Unexpected server-side errors.
+
+HTTP status codes depend on the exception and operation. For example, successful creation returns `201 Created`, successful status changes return `204 No Content`, and missing resources return `404 Not Found`.
+
+## Testing
+
+Run the complete verification lifecycle:
+
+```powershell
+mvn clean verify
+```
+
+The test suite includes unit tests and integration tests.
+
+Integration tests use Testcontainers to provision temporary PostgreSQL databases. Docker Desktop must be running before executing the full test suite.
+
+Check Docker availability:
+
+```powershell
+docker info
+```
+
+### JaCoCo coverage report
+
+After verification, open:
+
+```text
+target/site/jacoco/index.html
+```
+
+JaCoCo measures test coverage and the Maven verification lifecycle enforces the configured coverage thresholds.
+
+## SonarQube Analysis
+
+SonarQube provides static code analysis to help identify:
+
+- Bugs and potential vulnerabilities.
+- Security hotspots.
+- Code smells.
+- Code duplication.
+- Test coverage.
+- Maintainability issues.
+
+JaCoCo and SonarQube serve different purposes: JaCoCo measures test coverage, while SonarQube provides a broader view of code quality and maintainability.
+
+Run the analysis using the SonarQube configuration available in the project:
+
+```powershell
+mvn clean verify sonar:sonar
+```
+
+Make sure your SonarQube server and project configuration are available before running the analysis.
+
+## Project Structure
+
+```text
+src/
+└── main/
+    ├── java/
+    │   └── ma/affilatelink/
+    │       ├── common/
+    │       │   └── exceptions/
+    │       ├── offer/
+    │       │   ├── api/
+    │       │   ├── controllers/
+    │       │   ├── dto/
+    │       │   ├── entities/
+    │       │   ├── enums/
+    │       │   ├── listeners/
+    │       │   ├── repositories/
+    │       │   └── services/
+    │       │       └── implementation/
+    │       ├── profil/
+    │       │   ├── api/
+    │       │   ├── controllers/
+    │       │   ├── dto/
+    │       │   ├── entities/
+    │       │   ├── enums/
+    │       │   ├── events/
+    │       │   ├── repositories/
+    │       │   └── services/
+    │       │       └── implementation/
+    │       └── AffiliateLinkApplication.java
+    └── resources/
+        ├── application.yaml
+        └── db/
+            └── migration/
+```
+
+## License
+
+This project is developed as part of an educational software engineering project.
