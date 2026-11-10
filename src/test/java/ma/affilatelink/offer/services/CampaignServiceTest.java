@@ -10,6 +10,7 @@ import ma.affilatelink.offer.enums.CampaignStatus;
 import ma.affilatelink.offer.enums.PayoutModel;
 import ma.affilatelink.offer.repositories.CampaignRepository;
 import ma.affilatelink.offer.repositories.OfferRepository;
+import ma.affilatelink.offer.services.implementation.CampaignServiceImpl;
 import ma.affilatelink.profil.api.ProfileApi;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -51,13 +52,19 @@ class CampaignServiceTest {
     @Mock
     private ProfileApi profileApi;
 
-    @InjectMocks
     private CampaignService campaignService;
 
     private Offer offer;
 
     @BeforeEach
     void setUp() {
+        campaignService = new CampaignServiceImpl(
+                campaignRepository,
+                offerRepository,
+                campaignMapper,
+                profileApi
+        );
+
         offer = mock(Offer.class);
     }
 

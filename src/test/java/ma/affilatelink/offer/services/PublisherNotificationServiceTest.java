@@ -1,5 +1,6 @@
 package ma.affilatelink.offer.services;
 
+import ma.affilatelink.offer.services.implementation.PublisherNotificationServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -17,7 +18,7 @@ class PublisherNotificationServiceTest {
     @BeforeEach
     void setUp() {
         emailService = mock(EmailService.class);
-        notificationService = new PublisherNotificationService(emailService);
+        notificationService = new PublisherNotificationServiceImpl(emailService);
     }
 
     @Test

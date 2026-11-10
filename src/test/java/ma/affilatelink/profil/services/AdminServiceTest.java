@@ -5,6 +5,7 @@ import ma.affilatelink.profil.entities.Profile;
 import ma.affilatelink.profil.enums.ProfileStatus;
 import ma.affilatelink.profil.events.ProfileSuspended;
 import ma.affilatelink.profil.repositories.ProfileRepository;
+import ma.affilatelink.profil.services.implementation.AdminServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationEventPublisher;
@@ -26,7 +27,7 @@ class AdminServiceTest {
         profileRepository = mock(ProfileRepository.class);
         eventPublisher = mock(ApplicationEventPublisher.class);
 
-        adminService = new AdminService(
+        adminService = new AdminServiceImpl(
                 profileRepository,
                 eventPublisher
         );

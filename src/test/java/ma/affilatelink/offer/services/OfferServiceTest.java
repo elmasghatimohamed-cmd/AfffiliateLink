@@ -7,6 +7,7 @@ import ma.affilatelink.offer.dto.UpdateOfferRequest;
 import ma.affilatelink.offer.entities.Offer;
 import ma.affilatelink.offer.repositories.OfferRepository;
 import ma.affilatelink.offer.repositories.OfferSpecifications;
+import ma.affilatelink.offer.services.implementation.OfferServiceImpl;
 import ma.affilatelink.offer.repositories.TagRepository;
 import ma.affilatelink.profil.api.ProfileApi;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,7 +46,6 @@ class OfferServiceTest {
     @Mock
     private ProfileApi profileApi;
 
-    @InjectMocks
     private OfferService offerService;
 
     private CreateOfferRequest createRequest;
@@ -54,6 +54,12 @@ class OfferServiceTest {
 
     @BeforeEach
     void setUp() {
+        offerService = new OfferServiceImpl(
+                offerRepository,
+                tagRepository,
+                offerMapper,
+                profileApi
+        );
         createRequest = new CreateOfferRequest(
                 1L,
                 "Java Course",

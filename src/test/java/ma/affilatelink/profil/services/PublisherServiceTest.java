@@ -8,6 +8,7 @@ import ma.affilatelink.profil.enums.Niche;
 import ma.affilatelink.profil.enums.ProfileStatus;
 import ma.affilatelink.profil.repositories.ProfileRepository;
 import ma.affilatelink.profil.repositories.PublisherRepository;
+import ma.affilatelink.profil.services.implementation.PublisherServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -32,7 +33,7 @@ class PublisherServiceTest {
         publisherRepository = mock(PublisherRepository.class);
         profileRepository = mock(ProfileRepository.class);
 
-        publisherService = new PublisherService(
+        publisherService = new PublisherServiceImpl(
                 publisherRepository,
                 profileRepository
         );
