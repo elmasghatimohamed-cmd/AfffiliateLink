@@ -1,4 +1,4 @@
-# AffiliateLink – Profile, Offer & Campaign Management Platform
+# AffiliateLink – Affiliation Management Platform
 
 ## Overview
 
