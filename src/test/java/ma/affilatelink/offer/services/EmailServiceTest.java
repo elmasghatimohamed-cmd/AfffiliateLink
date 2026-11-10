@@ -1,5 +1,6 @@
 package ma.affilatelink.offer.services;
 
+import ma.affilatelink.offer.services.implementation.EmailServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -17,7 +18,7 @@ class EmailServiceTest {
     @BeforeEach
     void setUp() {
         mailSender = mock(JavaMailSender.class);
-        emailService = new EmailService(
+        emailService = new EmailServiceImpl(
                 mailSender,
                 "noreply@example.com"
         );

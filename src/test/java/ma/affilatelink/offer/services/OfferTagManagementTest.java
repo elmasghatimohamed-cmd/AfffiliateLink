@@ -8,11 +8,11 @@ import ma.affilatelink.offer.entities.Offer;
 import ma.affilatelink.offer.entities.Tag;
 import ma.affilatelink.offer.repositories.OfferRepository;
 import ma.affilatelink.offer.repositories.TagRepository;
+import ma.affilatelink.offer.services.implementation.OfferServiceImpl;
 import ma.affilatelink.profil.api.ProfileApi;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -38,13 +38,18 @@ class OfferTagManagementTest {
     @Mock
     private ProfileApi profileApi;
 
-    @InjectMocks
     private OfferService offerService;
 
     private Offer offer;
 
     @BeforeEach
     void setUp() {
+        offerService = new OfferServiceImpl(
+                offerRepository,
+                tagRepository,
+                offerMapper,
+                profileApi
+        );
         offer = new Offer(
                 1L,
                 "Java Course",

@@ -7,6 +7,7 @@ import ma.affilatelink.profil.entities.Advertiser;
 import ma.affilatelink.profil.enums.ProfileStatus;
 import ma.affilatelink.profil.repositories.AdvertiserRepository;
 import ma.affilatelink.profil.repositories.ProfileRepository;
+import ma.affilatelink.profil.services.implementation.AdvertiserServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -30,7 +31,7 @@ class AdvertiserServiceTest {
         advertiserRepository = mock(AdvertiserRepository.class);
         profileRepository = mock(ProfileRepository.class);
 
-        advertiserService = new AdvertiserService(
+        advertiserService = new AdvertiserServiceImpl(
                 advertiserRepository,
                 profileRepository
         );
