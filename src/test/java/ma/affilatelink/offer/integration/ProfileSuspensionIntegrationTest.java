@@ -1,4 +1,4 @@
-package ma.affilatelink.offer.listeners;
+package ma.affilatelink.offer.integration;
 
 import ma.affilatelink.offer.entities.Campaign;
 import ma.affilatelink.offer.entities.Offer;
