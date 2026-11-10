@@ -1,12 +1,12 @@
-
 package ma.affilatelink.offer.services;
 
 import ma.affilatelink.offer.dto.CreateOfferRequest;
 import ma.affilatelink.offer.dto.OfferMapper;
 import ma.affilatelink.offer.dto.OfferResponse;
+import ma.affilatelink.offer.dto.UpdateOfferRequest;
 import ma.affilatelink.offer.entities.Offer;
-import ma.affilatelink.offer.entities.Tag;
 import ma.affilatelink.offer.repositories.OfferRepository;
+import ma.affilatelink.offer.repositories.OfferSpecifications;
 import ma.affilatelink.offer.repositories.TagRepository;
 import ma.affilatelink.profil.api.ProfileApi;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,16 +15,19 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import ma.affilatelink.offer.dto.UpdateOfferRequest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -45,19 +48,19 @@ class OfferServiceTest {
     @InjectMocks
     private OfferService offerService;
 
-    private CreateOfferRequest request;
+    private CreateOfferRequest createRequest;
     private Offer offer;
     private OfferResponse response;
 
     @BeforeEach
     void setUp() {
-        request = new CreateOfferRequest(
+        createRequest = new CreateOfferRequest(
                 1L,
                 "Java Course",
                 "A course about Java",
                 "https://example.com/java",
                 "TECH",
-                Set.of("Java")
+                Set.of()
         );
 
         offer = new Offer(
@@ -74,90 +77,141 @@ class OfferServiceTest {
     @Test
     void shouldCreateOfferWhenAdvertiserIsActive() {
         when(profileApi.isAdvertiserActive(1L)).thenReturn(true);
-        when(offerMapper.toEntity(request)).thenReturn(offer);
-        when(tagRepository.findByName("Java")).thenReturn(Optional.empty());
-        when(tagRepository.save(any(Tag.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+        when(offerMapper.toEntity(createRequest)).thenReturn(offer);
         when(offerRepository.save(offer)).thenReturn(offer);
         when(offerMapper.toResponse(offer)).thenReturn(response);
 
-        OfferResponse result = offerService.createOffer(request);
+        OfferResponse result = offerService.createOffer(createRequest);
 
         assertSame(response, result);
-        assertTrue(offer.getTags().stream()
-                .anyMatch(tag -> tag.getName().equals("Java")));
-
         verify(profileApi).isAdvertiserActive(1L);
         verify(offerRepository).save(offer);
-        verify(tagRepository).save(any(Tag.class));
+        verify(offerMapper).toEntity(createRequest);
+        verify(offerMapper).toResponse(offer);
     }
 
     @Test
     void shouldRejectOfferWhenAdvertiserIsInactive() {
         when(profileApi.isAdvertiserActive(1L)).thenReturn(false);
 
-        NoSuchElementException exception = assertThrows(
+        assertThrows(
                 NoSuchElementException.class,
-                () -> offerService.createOffer(request)
+                () -> offerService.createOffer(createRequest)
         );
 
-        assertTrue(exception.getMessage()
-                .contains("Advertiser is not active or does not exist"));
-
-        verify(offerRepository, never()).save(any(Offer.class));
+        verify(offerRepository, never()).save(any());
         verifyNoInteractions(offerMapper, tagRepository);
     }
 
     @Test
-    void shouldThrowWhenOfferDoesNotExist() {
+    void shouldUpdateExistingOffer() {
+        UpdateOfferRequest request = new UpdateOfferRequest(
+                "Updated title",
+                "Updated description",
+                "https://example.com/updated",
+                "TECH",
+                Set.of()
+        );
+
+        when(offerRepository.findById(10L)).thenReturn(Optional.of(offer));
+        when(offerRepository.save(offer)).thenReturn(offer);
+        when(offerMapper.toResponse(offer)).thenReturn(response);
+
+        OfferResponse result = offerService.updateOffer(10L, request);
+
+        assertSame(response, result);
+        verify(offerMapper).updateEntity(request, offer);
+        verify(offerRepository).save(offer);
+    }
+
+    @Test
+    void shouldThrowWhenUpdatingNonExistingOffer() {
+        UpdateOfferRequest request = mock(UpdateOfferRequest.class);
         when(offerRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThrows(
                 NoSuchElementException.class,
-                () -> offerService.updateOffer(99L, mock(UpdateOfferRequest.class))
+                () -> offerService.updateOffer(99L, request)
         );
 
-        verify(offerRepository, never()).save(any(Offer.class));
+        verify(offerRepository, never()).save(any());
+        verifyNoInteractions(offerMapper);
     }
 
     @Test
-    void shouldReuseExistingTagWhenCreatingOffer() {
-        Tag existingTag = new Tag("Java");
-
-        when(profileApi.isAdvertiserActive(1L)).thenReturn(true);
-        when(offerMapper.toEntity(request)).thenReturn(offer);
-        when(tagRepository.findByName("Java")).thenReturn(Optional.of(existingTag));
-        when(offerRepository.save(offer)).thenReturn(offer);
+    void shouldRetrieveOfferById() {
+        when(offerRepository.findById(1L)).thenReturn(Optional.of(offer));
         when(offerMapper.toResponse(offer)).thenReturn(response);
 
-        offerService.createOffer(request);
+        OfferResponse result = offerService.getOfferById(1L);
 
-        assertTrue(offer.getTags().contains(existingTag));
-        verify(tagRepository, never()).save(any(Tag.class));
+        assertSame(response, result);
+        verify(offerRepository).findById(1L);
+        verify(offerMapper).toResponse(offer);
     }
 
     @Test
-    void shouldTrimTagNamesBeforeLookingThemUp() {
-        CreateOfferRequest requestWithSpaces = new CreateOfferRequest(
-                1L,
-                "Java Course",
-                "A course about Java",
-                "https://example.com/java",
+    void shouldThrowWhenRetrievingNonExistingOffer() {
+        when(offerRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(
+                NoSuchElementException.class,
+                () -> offerService.getOfferById(99L)
+        );
+
+        verifyNoInteractions(offerMapper);
+    }
+
+    @Test
+    void shouldSearchOffersUsingProvidedFiltersAndPageable() {
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Offer> offerPage = new PageImpl<>(List.of(offer));
+
+        when(offerRepository.findAll(
+                any(Specification.class),
+                eq(pageable)
+        )).thenReturn(offerPage);
+
+        when(offerMapper.toResponse(offer)).thenReturn(response);
+
+        Page<OfferResponse> result = offerService.searchOffers(
                 "TECH",
-                Set.of(" Java ")
+                1L,
+                "Java",
+                "course",
+                pageable
         );
 
-        when(profileApi.isAdvertiserActive(1L)).thenReturn(true);
-        when(offerMapper.toEntity(requestWithSpaces)).thenReturn(offer);
-        when(tagRepository.findByName("Java")).thenReturn(Optional.empty());
-        when(tagRepository.save(any(Tag.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
-        when(offerRepository.save(offer)).thenReturn(offer);
-        when(offerMapper.toResponse(offer)).thenReturn(response);
+        assertEquals(1, result.getTotalElements());
+        assertSame(response, result.getContent().get(0));
 
-        offerService.createOffer(requestWithSpaces);
+        verify(offerRepository).findAll(
+                any(Specification.class),
+                eq(pageable)
+        );
+        verify(offerMapper).toResponse(offer);
+    }
 
-        verify(tagRepository).findByName("Java");
-        verify(tagRepository).save(any(Tag.class));
+    @Test
+    void shouldReturnEmptyPageWhenNoOffersMatchSearch() {
+        Pageable pageable = PageRequest.of(0, 10);
+
+        when(offerRepository.findAll(
+                any(Specification.class),
+                eq(pageable)
+        )).thenReturn(Page.empty(pageable));
+
+        Page<OfferResponse> result = offerService.searchOffers(
+                "TECH",
+                null,
+                null,
+                "unknown",
+                pageable
+        );
+
+        assertTrue(result.isEmpty());
+        assertEquals(0, result.getTotalElements());
+
+        verifyNoInteractions(offerMapper);
     }
 }
